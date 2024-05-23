@@ -232,9 +232,10 @@ struct Cli {
     /// Show Gas details information
     show_gas_details: ShowGasDetails,
 
-    #[arg(long, default_value_t = DEFAULT_L2_GAS_PRICE)]
-    /// If provided, uses a custom value as the L2 gas price.
-    l2_gas_price: u64,
+    #[arg(long)]
+    /// If provided, uses a custom value as the L2 gas price. If not provided the gas price will be
+    /// inferred from the protocol version.
+    l2_gas_price: Option<u64>,
 
     #[arg(long)]
     /// If true, the tool will try to contact openchain to resolve the ABI & topic names.
@@ -360,11 +361,27 @@ async fn main() -> anyhow::Result<()> {
         DevSystemContracts::Local => system_contracts::Options::Local,
     };
 
+    // If L2 gas price has been supplied as an argument use that value,
+    // otherwise procure it from the fork source, or if that fails, use the
+    // `DEFAULT_L2_GAS_PRICE`.
+    let l2_fair_gas_price = opt.l2_gas_price.unwrap_or_else(|| {
+        if let Some(f) = &fork_details {
+            f.l2_fair_gas_price
+        } else {
+            DEFAULT_L2_GAS_PRICE
+        }
+    });
+
+    tracing::info!(
+        "Starting node with L2 gas price set to {}",
+        l2_fair_gas_price
+    );
+
     let node = InMemoryNode::new(
         fork_details,
         Some(observability),
         InMemoryNodeConfig {
-            l2_gas_price: opt.l2_gas_price,
+            l2_fair_gas_price,
             show_calls: opt.show_calls,
             show_outputs: opt.show_outputs,
             show_storage_logs: opt.show_storage_logs,
