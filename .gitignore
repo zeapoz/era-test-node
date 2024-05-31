@@ -17,3 +17,5 @@ etc/**/*.zbin
 
 *.log
 .cache
+
+.direnv
