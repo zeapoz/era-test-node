@@ -17,7 +17,7 @@
       overlays = [(import rust-overlay)];
       pkgs = import nixpkgs {inherit system overlays;};
       rust-toolchain =
-        pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
+        (pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml).override {extensions = ["rust-src"];};
     in {
       devShell = with pkgs;
         mkShell {
