@@ -950,10 +950,7 @@ impl<S: ForkSource + std::fmt::Debug + Clone> InMemoryNode<S> {
                 current_batch: f.l1_block.0,
                 current_miniblock: f.l2_miniblock,
                 current_miniblock_hash: f.l2_miniblock_hash,
-                fee_input_provider: TestNodeFeeInputProvider::new(
-                    f.l1_gas_price,
-                    config.l2_fair_gas_price,
-                ),
+                fee_input_provider: TestNodeFeeInputProvider::from_fee_params(f.fee_params),
                 tx_results: Default::default(),
                 blocks,
                 block_hashes,
@@ -987,10 +984,7 @@ impl<S: ForkSource + std::fmt::Debug + Clone> InMemoryNode<S> {
                 current_batch: 0,
                 current_miniblock: 0,
                 current_miniblock_hash: block_hash,
-                fee_input_provider: TestNodeFeeInputProvider::new(
-                    L1_GAS_PRICE,
-                    config.l2_fair_gas_price,
-                ),
+                fee_input_provider: TestNodeFeeInputProvider::default(),
                 tx_results: Default::default(),
                 blocks,
                 block_hashes,
@@ -1781,7 +1775,7 @@ impl BlockContext {
 mod tests {
     use ethabi::{Token, Uint};
     use zksync_basic_types::Nonce;
-    use zksync_types::{utils::deployed_address_create, K256PrivateKey};
+    use zksync_types::{fee_model::FeeParams, utils::deployed_address_create, K256PrivateKey};
 
     use super::*;
     use crate::{
@@ -1888,6 +1882,7 @@ mod tests {
                 overwrite_chain_id: None,
                 l1_gas_price: 1000,
                 l2_fair_gas_price: DEFAULT_L2_GAS_PRICE,
+                fee_params: FeeParams::sensible_v1_default(),
             }),
             None,
             Default::default(),

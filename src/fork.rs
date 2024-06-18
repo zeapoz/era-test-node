@@ -19,6 +19,7 @@ use zksync_types::{
         Block, BlockDetails, BlockIdVariant, BlockNumber, BridgeAddresses, Transaction,
         TransactionDetails, TransactionVariant,
     },
+    fee_model::FeeParams,
     l2::L2Tx,
     url::SensitiveUrl,
     ProtocolVersionId, StorageKey,
@@ -271,6 +272,9 @@ pub trait ForkSource {
     /// Returns the block details for a given miniblock number.
     fn get_block_details(&self, miniblock: L2BlockNumber) -> eyre::Result<Option<BlockDetails>>;
 
+    /// Returns fee parameters for the give source.
+    fn get_fee_params(&self) -> eyre::Result<FeeParams>;
+
     /// Returns the  transaction count for a given block hash.
     fn get_block_transaction_count_by_hash(&self, block_hash: H256) -> eyre::Result<Option<U256>>;
 
@@ -321,6 +325,7 @@ pub struct ForkDetails<S> {
     pub overwrite_chain_id: Option<L2ChainId>,
     pub l1_gas_price: u64,
     pub l2_fair_gas_price: u64,
+    pub fee_params: FeeParams,
 }
 
 const SUPPORTED_VERSIONS: &[ProtocolVersionId] = &[
@@ -402,6 +407,11 @@ impl ForkDetails<HttpForkSource> {
             );
         }
 
+        let fee_params = client
+            .get_fee_params()
+            .await
+            .expect("Unable to get upstream fork");
+
         ForkDetails {
             fork_source: HttpForkSource::new(url.to_owned(), cache_config),
             l1_block: l1_batch_number,
@@ -412,6 +422,7 @@ impl ForkDetails<HttpForkSource> {
             overwrite_chain_id: chain_id,
             l1_gas_price: block_details.base.l1_gas_price,
             l2_fair_gas_price: block_details.base.l2_fair_gas_price,
+            fee_params,
         }
     }
     /// Create a fork from a given network at a given height.
@@ -506,7 +517,7 @@ impl<S: ForkSource> ForkDetails<S> {
 mod tests {
     use zksync_basic_types::{AccountTreeId, L1BatchNumber, H256};
     use zksync_state::ReadStorage;
-    use zksync_types::{api::TransactionVariant, StorageKey};
+    use zksync_types::{api::TransactionVariant, fee_model::FeeParams, StorageKey};
 
     use crate::{deps::InMemoryStorage, node::DEFAULT_L2_GAS_PRICE, system_contracts, testing};
 
@@ -538,6 +549,7 @@ mod tests {
             overwrite_chain_id: None,
             l1_gas_price: 100,
             l2_fair_gas_price: DEFAULT_L2_GAS_PRICE,
+            fee_params: FeeParams::sensible_v1_default(),
         };
 
         let mut fork_storage = ForkStorage::new(Some(fork_details), &options);
