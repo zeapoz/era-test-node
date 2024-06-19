@@ -950,7 +950,7 @@ impl<S: ForkSource + std::fmt::Debug + Clone> InMemoryNode<S> {
                 current_batch: f.l1_block.0,
                 current_miniblock: f.l2_miniblock,
                 current_miniblock_hash: f.l2_miniblock_hash,
-                fee_input_provider: TestNodeFeeInputProvider::from_fee_params(f.fee_params),
+                fee_input_provider: f.fee_params.into(),
                 tx_results: Default::default(),
                 blocks,
                 block_hashes,

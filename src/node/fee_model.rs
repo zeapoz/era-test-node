@@ -18,22 +18,6 @@ pub struct TestNodeFeeInputProvider {
 }
 
 impl TestNodeFeeInputProvider {
-    pub fn from_fee_params(fee_params: FeeParams) -> Self {
-        match fee_params {
-            FeeParams::V1(_) => todo!(),
-            FeeParams::V2(fee_params) => Self {
-                l1_gas_price: fee_params.l1_gas_price,
-                l1_pubdata_price: fee_params.l1_pubdata_price,
-                l2_gas_price: fee_params.config.minimal_l2_gas_price,
-                compute_overhead_part: fee_params.config.compute_overhead_part,
-                pubdata_overhead_part: fee_params.config.pubdata_overhead_part,
-                batch_overhead_l1_gas: fee_params.config.batch_overhead_l1_gas,
-                max_gas_per_batch: fee_params.config.max_gas_per_batch,
-                max_pubdata_per_batch: fee_params.config.max_pubdata_per_batch,
-            },
-        }
-    }
-
     pub fn get_fee_model_config(&self) -> FeeModelConfigV2 {
         FeeModelConfigV2 {
             minimal_l2_gas_price: self.l2_gas_price,
@@ -54,6 +38,24 @@ impl BatchFeeModelInputProvider for TestNodeFeeInputProvider {
             l1_gas_price: self.l1_gas_price,
             l1_pubdata_price: self.l1_pubdata_price,
         })
+    }
+}
+
+impl From<FeeParams> for TestNodeFeeInputProvider {
+    fn from(value: FeeParams) -> Self {
+        match value {
+            FeeParams::V1(_) => todo!(),
+            FeeParams::V2(value) => Self {
+                l1_gas_price: value.l1_gas_price,
+                l1_pubdata_price: value.l1_pubdata_price,
+                l2_gas_price: value.config.minimal_l2_gas_price,
+                compute_overhead_part: value.config.compute_overhead_part,
+                pubdata_overhead_part: value.config.pubdata_overhead_part,
+                batch_overhead_l1_gas: value.config.batch_overhead_l1_gas,
+                max_gas_per_batch: value.config.max_gas_per_batch,
+                max_pubdata_per_batch: value.config.max_pubdata_per_batch,
+            },
+        }
     }
 }
 
